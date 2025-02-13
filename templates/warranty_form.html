@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warranty Form</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("warrantyForm");
+            const issueContainer = document.getElementById("issueContainer");
+            const addIssueBtn = document.getElementById("addIssue");
+            let issueCount = 1;
+
+            addIssueBtn.addEventListener("click", function () {
+                issueCount++;
+                const newIssue = document.createElement("div");
+                newIssue.classList.add("issue");
+                newIssue.innerHTML = `
+                    <h3>Issue ${issueCount}</h3>
+                    <label for="short_summary_${issueCount}">Short Summary of Issue:</label>
+                    <input type="text" id="short_summary_${issueCount}" name="short_summary[]" required>
+                    <span class="required">*</span>
+
+                    <label for="detailed_explanation_${issueCount}">Detailed Explanation:</label>
+                    <textarea id="detailed_explanation_${issueCount}" name="detailed_explanation[]" required></textarea>
+                    <span class="required">*</span>
+
+                    <label for="photos_${issueCount}">Photos of Issue:</label>
+                    <div id="file-drop-zone-${issueCount}" class="file-area">
+                        <input type="file" id="photos_${issueCount}" name="photos_${issueCount}[]" accept="image/*" multiple required hidden>
+                        <div class="file-dummy">
+                            <span class="default">Click to select a file, or drag it here</span>
+                        </div>
+                    </div>
+                    <div id="file-list-${issueCount}" class="file-list"></div>
+                    <span class="required">*</span>
+                `;
+                issueContainer.appendChild(newIssue);
+
+                // Initialize drag-and-drop for the new issue
+                setupDragAndDrop(issueCount);
+            });
+
+            form.addEventListener("submit", function (event) {
+                let isValid = true;
+
+                const issuePhotos = document.querySelectorAll('[name^="photos_"]');
+                issuePhotos.forEach((photoInput) => {
+                    if (photoInput.files.length === 0) {
+                        isValid = false;
+                        photoInput.setCustomValidity("Please upload at least one photo.");
+                    } else {
+                        photoInput.setCustomValidity(""); // Clear any previous validation errors
+                    }
+                });
+
+                if (!isValid) {
+                    event.preventDefault();  // Prevent form submission if validation fails
+                }
+            });
+        });
+
+        function setupDragAndDrop(issueIndex) {
+            const dropZone = document.getElementById(`file-drop-zone-${issueIndex}`);
+            const fileInput = document.getElementById(`photos_${issueIndex}`);
+            const fileList = document.getElementById(`file-list-${issueIndex}`);
+
+            dropZone.addEventListener("click", () => fileInput.click());
+
+            dropZone.addEventListener("dragover", (event) => {
+                event.preventDefault();
+                dropZone.classList.add("dragover");
+            });
+
+            dropZone.addEventListener("dragleave", () => {
+                dropZone.classList.remove("dragover");
+            });
+
+   dropZone.addEventListener("drop", (event) => {
+       event.preventDefault();
+       dropZone.classList.remove("dragover");
+
+       const files = event.dataTransfer.files;
+       fileInput.files = files; // Update the input
+
+       handleFileUpload(files, document.getElementById('file-preview'), document.getElementById('file-list'));
+   });
+
+            fileInput.addEventListener("change", () => {
+                updateFileList(fileList, fileInput.files);
+            });
+        }
+
+function updateFileList(fileList, files) {
+    fileList.innerHTML = "";  // Clear the file list container
+    for (let i = 0; i < files.length; i++) {
+        // Create a new element to display the file name
+        const fileItem = document.createElement("div");
+        fileItem.classList.add("file-item");
+
+        // Create an image preview for image files
+        const file = files[i];
+        if (file.type.startsWith("image/")) {
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(file);
+            img.alt = file.name;
+            img.classList.add("file-preview");
+            fileItem.appendChild(img);
+        } else {
+            fileItem.innerHTML += `<p>${file.name}</p>`;
+        }
+
+        // Append the file item to the file list
+        fileList.appendChild(fileItem);
+    }
+}
+
+     function handleFileUpload(files, previewContainer, itemContainer) {
+         Array.from(files).forEach(file => {
+             const fileItem = document.createElement('div');
+             fileItem.classList.add('file-item');
+             fileItem.textContent = file.name;
+
+             // If previewing images, create an image preview
+             if (file.type.startsWith('image/')) {
+                 const imgPreview = document.createElement('img');
+                 imgPreview.classList.add('file-preview');
+                 imgPreview.src = URL.createObjectURL(file);
+                 previewContainer.appendChild(imgPreview);
+             }
+
+             itemContainer.appendChild(fileItem);
+         });
+     }
+
+    </script>
+
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body Styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: white;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: #333;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        /* Form Elements */
+        label {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            display: inline-block;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea,
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: #f9f9f9;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        textarea {
+            height: 150px;
+        }
+
+        /* Radio buttons & checkboxes */
+        input[type="radio"],
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        /* Submit button styling - Modern small button */
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        /* Add issue button - Modern small button */
+        button[type="button"] {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="button"]:hover {
+            background-color: #0069d9;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            button[type="submit"], button[type="button"] {
+                font-size: 1rem;
+                padding: 10px 15px;
+            }
+        }
+
+        /* Submit button styling */
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        /* Add issue button styling */
+        button[type="button"] {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="button"]:hover {
+            background-color: #0069d9;
+        }
+
+        .required {
+            color: red;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        /* Remove issue container box styling */
+        .issue {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: transparent;
+            border: none;
+        }
+
+        .file-area {
+  width: 100%;
+  position: relative;
+  font-size: 18px;
+}
+
+.file-area input[type=file] {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.file-area .file-dummy {
+  width: 100%;
+  padding: 50px 30px;
+  border: 2px dashed #ccc;
+  background-color: #fff;
+  text-align: center;
+  transition: background 0.3s ease-in-out;
+}
+
+.file-area .file-dummy .success {
+  display: none;
+}
+
+.file-area:hover .file-dummy {
+  border: 2px dashed #1abc9c;
+}
+
+.file-area input[type=file]:valid+.file-dummy {
+  border-color: #1abc9c;
+}
+
+.file-area input[type=file]:valid+.file-dummy .success {
+  display: inline-block;
+}
+
+.file-area input[type=file]:valid+.file-dummy .default {
+  display: none;
+}
+
+.file-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.file-preview {
+    width: 100px; /* Adjust size as needed */
+    height: 100px;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    margin-top: 5px;
+}
+
+
+.file-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Warranty Form</h1>
+        <p>Please complete the form below</p>
+    </header>
+    <form id="warrantyForm" method="POST" action="/submit-warranty">
+        <label for="name">Full Name:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="email">Email Address:</label>
+        <input type="email" id="email" name="email" required>
+
+        <div id="issueContainer">
+            <div class="issue">
+                <h3>Issue 1</h3>
+                <label for="short_summary_1">Short Summary of Issue:</label>
+                <input type="text" id="short_summary_1" name="short_summary[]" required>
+                <span class="required">*</span>
+
+                <label for="detailed_explanation_1">Detailed Explanation:</label>
+                <textarea id="detailed_explanation_1" name="detailed_explanation[]" required></textarea>
+                <span class="required">*</span>
+
+                <label for="photos_1">Photos of Issue: multiple photos can be placed in here</label>
+                <div class="file-area">
+                  <input type="file" id="photos" name="photos[]" accept="image/*" multiple>
+                  <div class="file-dummy">
+                    <span class="default">Click to select a file, or drag it here</span>
+                    <span class="success">Click to select a file, or drag it here</span>
+                  </div>
+                </div>
+                <div id="file-list-1" class="file-list"></div>
+                <span class="required">*</span>
+            </div>
+        </div>
+
+        <button type="button" id="addIssue">Add Another Issue</button>
+        <button type="submit">Submit Warranty</button>
+    </form>
+</body>
+</html>

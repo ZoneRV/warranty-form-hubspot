@@ -4,8 +4,23 @@
     <base href="/warranty-form-hubspot/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link id="favicon" rel="icon" href="static/images/favicon.png" type="image/png" sizes="16x16">
     <title>Warranty Form</title>
 </head>
+<script>
+    function updateFavicon() {
+        const darkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const favicon = document.getElementById("favicon");
+
+        if (darkMode) {
+          favicon.href = "static/images/favicon_white.png";
+        } else {
+          favicon.href = "static/images/favicon.png";
+        }
+      }
+
+      updateFavicon(); // Run on page load
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateFavicon);</script>
     <body>
         <iframe src="templates/warranty_form.html" width="100%" height="1000px"></iframe>
     </body>

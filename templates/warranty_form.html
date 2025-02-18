@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warranty Form</title>
     <link id="favicon" rel="icon" href="static/images/favicon.png" type="image/io" sizes="16x16">
-    <link rel="stylesheet" href="static/images/favicon_white.png">
     <script>
       function updateFavicon() {
         const darkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
         const favicon = document.getElementById("favicon");
 
         if (darkMode) {
-          favicon.href = "static/images/favicon_white.png}";
+          favicon.href = "static/images/favicon_white.png";
         } else {
           favicon.href = "static/images/favicon.png";
         }

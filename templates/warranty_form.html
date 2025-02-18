@@ -4,139 +4,292 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warranty Form</title>
+    <link id="favicon" rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/io" sizes="16x16">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const form = document.getElementById("warrantyForm");
-            const issueContainer = document.getElementById("issueContainer");
-            const addIssueBtn = document.getElementById("addIssue");
-            let issueCount = 1;
+      function updateFavicon() {
+        const darkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const favicon = document.getElementById("favicon");
 
-            addIssueBtn.addEventListener("click", function () {
-                issueCount++;
-                const newIssue = document.createElement("div");
-                newIssue.classList.add("issue");
-                newIssue.innerHTML = `
-                    <h3>Issue ${issueCount}</h3>
-                    <label for="short_summary_${issueCount}">Short Summary of Issue:</label>
-                    <input type="text" id="short_summary_${issueCount}" name="short_summary[]" required>
-                    <span class="required">*</span>
+        if (darkMode) {
+          favicon.href = "{{ url_for('static', filename='favicon white.png') }}";
+        } else {
+          favicon.href = "{{ url_for('static', filename='favicon.png') }}";
+        }
+      }
 
-                    <label for="detailed_explanation_${issueCount}">Detailed Explanation:</label>
-                    <textarea id="detailed_explanation_${issueCount}" name="detailed_explanation[]" required></textarea>
-                    <span class="required">*</span>
+      updateFavicon(); // Run on page load
 
-                    <label for="photos_${issueCount}">Photos of Issue:</label>
-                    <div id="file-drop-zone-${issueCount}" class="file-area">
-                        <input type="file" id="photos_${issueCount}" name="photos_${issueCount}[]" accept="image/*" multiple required hidden>
-                        <div class="file-dummy">
-                            <span class="default">Click to select a file, or drag it here</span>
-                        </div>
-                    </div>
-                    <div id="file-list-${issueCount}" class="file-list"></div>
-                    <span class="required">*</span>
-                `;
-                issueContainer.appendChild(newIssue);
 
-                // Initialize drag-and-drop for the new issue
-                setupDragAndDrop(issueCount);
-            });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateFavicon);
 
-            form.addEventListener("submit", function (event) {
-                let isValid = true;
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("warrantyForm");
+        const phoneInput = document.getElementById("phone_number");
 
-                const issuePhotos = document.querySelectorAll('[name^="photos_"]');
-                issuePhotos.forEach((photoInput) => {
-                    if (photoInput.files.length === 0) {
-                        isValid = false;
-                        photoInput.setCustomValidity("Please upload at least one photo.");
-                    } else {
-                        photoInput.setCustomValidity(""); // Clear any previous validation errors
-                    }
-                });
+        // Only allow numeric input for phone number
+        phoneInput.addEventListener("input", function () {
+            // Allow the + sign only at the beginning, remove other non-numeric characters
+            this.value = this.value.replace(/[^0-9+]/g, '');
 
-                if (!isValid) {
-                    event.preventDefault();  // Prevent form submission if validation fails
-                }
-            });
+            // Ensure that only one plus sign is at the beginning
+            if (this.value.indexOf("+") !== 0) {
+                this.value = this.value.replace(/\+/g, '');
+            }
         });
 
-        function setupDragAndDrop(issueIndex) {
-            const dropZone = document.getElementById(`file-drop-zone-${issueIndex}`);
-            const fileInput = document.getElementById(`photos_${issueIndex}`);
-            const fileList = document.getElementById(`file-list-${issueIndex}`);
+        // Form submission validation
+        form.addEventListener("submit", function (event) {
+            if (!/^\+?\d+$/.test(phoneInput.value)) {
+                alert("Please enter a valid phone number (eg +61 123456789).");
+                event.preventDefault(); // Prevent form submission if invalid
+            }
+        });
 
-            dropZone.addEventListener("click", () => fileInput.click());
+        // Handling adding new issues dynamically
+        const issueContainer = document.getElementById("issueContainer");
+        const addIssueBtn = document.getElementById("addIssue");
+        let issueCount = 0;
 
-            dropZone.addEventListener("dragover", (event) => {
-                event.preventDefault();
-                dropZone.classList.add("dragover");
+        addIssueBtn.addEventListener("click", function () {
+            issueCount++;
+            const newIssue = document.createElement("div");
+            newIssue.classList.add("issue");
+            newIssue.innerHTML = `
+                <h3>Claim ${issueCount +1}</h3>
+                <span class="required">*</span>
+                <label for="subject_${issueCount}">Short Summary of Issue:</label>
+                <input type="text" id="subject_${issueCount}" name="subject[]" required>
+
+                <span class="required">*</span>
+                <label for="content_${issueCount}">Detailed Explanation:</label>
+                <textarea id="content_${issueCount}" name="content[]" required></textarea>
+
+                <span class="required">*</span>
+                <label for="photos_${issueCount}">Photos of Issue:</label> <br>
+                <label for="required_photo_${issueCount}">Upload a required image:</label>
+                <input type="file" id="required_photo_${issueCount}" name="upload_your_photos_1_of_3_[]" accept="image/*" required>
+
+                <!-- Unique Name for Optional Multiple Images -->
+                <label for="more_photos${issueCount}">Upload optional images:</label>
+                <input type="file" id="more_photos${issueCount}" name="more_photos[${issueCount}]" accept="image/*" multiple>
+            `;
+            issueContainer.appendChild(newIssue);
+
+            // Initialize drag-and-drop for the new issue (if applicable)
+            setupDragAndDrop(issueCount);
+        });
+
+        // Handling file uploads and validation
+        form.addEventListener("submit", function (event) {
+            let isValid = true;
+
+            const issuePhotos = document.querySelectorAll('[name^="photos_"]');
+            issuePhotos.forEach((photoInput) => {
+                if (photoInput.files.length === 0) {
+                    isValid = false;
+                    photoInput.setCustomValidity("Please upload at least one photo.");
+                } else {
+                    photoInput.setCustomValidity(""); // Clear any previous validation errors
+                }
             });
 
-            dropZone.addEventListener("dragleave", () => {
-                dropZone.classList.remove("dragover");
-            });
+            if (!isValid) {
+                event.preventDefault();  // Prevent form submission if validation fails
+            }
+        });
+    });
 
-   dropZone.addEventListener("drop", (event) => {
-       event.preventDefault();
-       dropZone.classList.remove("dragover");
+    function setupDragAndDrop(issueIndex) {
+        const dropZone = document.getElementById(`file-drop-zone-${issueIndex}`);
+        const fileInput = document.getElementById(`photos_${issueIndex}`);
+        const fileList = document.getElementById(`file-list-${issueIndex}`);
 
-       const files = event.dataTransfer.files;
-       fileInput.files = files; // Update the input
+        dropZone.addEventListener("click", () => fileInput.click());
 
-       handleFileUpload(files, document.getElementById('file-preview'), document.getElementById('file-list'));
-   });
+        dropZone.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            dropZone.classList.add("dragover");
+        });
 
-            fileInput.addEventListener("change", () => {
-                updateFileList(fileList, fileInput.files);
-            });
+        dropZone.addEventListener("dragleave", () => {
+            dropZone.classList.remove("dragover");
+        });
+
+        dropZone.addEventListener("drop", (event) => {
+            event.preventDefault();
+            dropZone.classList.remove("dragover");
+
+            const files = event.dataTransfer.files;
+            fileInput.files = files; // Update the input
+
+            handleFileUpload(files, document.getElementById('file-preview'), document.getElementById('file-list'));
+        });
+
+        fileInput.addEventListener("change", () => {
+            updateFileList(fileList, fileInput.files);
+        });
+    }
+
+    function updateFileList(fileList, files) {
+        fileList.innerHTML = "";  // Clear the file list container
+        for (let i = 0; i < files.length; i++) {
+            const fileItem = document.createElement("div");
+            fileItem.classList.add("file-item");
+
+            const file = files[i];
+            if (file.type.startsWith("image/")) {
+                const img = document.createElement("img");
+                img.src = URL.createObjectURL(file);
+                img.alt = file.name;
+                img.classList.add("file-preview");
+                fileItem.appendChild(img);
+            } else {
+                fileItem.innerHTML += `<p>${file.name}</p>`;
+            }
+
+            fileList.appendChild(fileItem);
+        }
+    }
+
+    function handleFileUpload(files, previewContainer, itemContainer) {
+        Array.from(files).forEach(file => {
+            const fileItem = document.createElement('div');
+            fileItem.classList.add('file-item');
+            fileItem.textContent = file.name;
+
+            if (file.type.startsWith('image/')) {
+                const imgPreview = document.createElement('img');
+                imgPreview.classList.add('file-preview');
+                imgPreview.src = URL.createObjectURL(file);
+                previewContainer.appendChild(imgPreview);
+            }
+
+            itemContainer.appendChild(fileItem);
+        });
+    }
+
+    // Function to update the theme based on the user's system preference
+        function updateTheme() {
+            const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            const headerImage = document.getElementById("headerImage"); // The header image element
+            const h1 = document.querySelector("header h1");
+            const h2 = document.querySelector("header h2");
+            const h3 = document.querySelector("header h3");
+            const p = document.querySelector("header p");
+            const ula = document.querySelector("header ul");
+
+            if (isDarkMode) {
+                // Dark mode styles
+                document.body.classList.add('dark-mode');
+                document.body.classList.remove('light-mode');
+                headerImage.src = "{{ url_for('static', filename='Zone Logo White 800px.png') }}"; // Update image for dark mode
+                h1.style.color = 'white'; // White text for h1 in dark mode
+                h2.style.color = 'white'; // White text for h2 in dark mode
+                h3.style.color = 'white'; // White text for h3 in dark mode
+                p.style.color = 'white'; // White text for p in dark mode
+                ula.style.color = 'white'; // White text for links in dark mode
+            } else {
+                // Light mode styles
+                document.body.classList.add('light-mode');
+                document.body.classList.remove('dark-mode');
+                headerImage.src = "{{ url_for('static', filename='Zone Logo 800px.png') }}"; // Update image for light mode
+                h1.style.color = 'black'; // Black text for h1 in light mode
+                h2.style.color = 'black'; // Black text for h2 in light mode
+                h3.style.color = 'black'; // Black text for h3 in light mode
+                p.style.color = 'black'; // Black text for p in light mode
+                ula.style.color = 'black'; // Black text for links in light mode
+            }
         }
 
-function updateFileList(fileList, files) {
-    fileList.innerHTML = "";  // Clear the file list container
-    for (let i = 0; i < files.length; i++) {
-        // Create a new element to display the file name
-        const fileItem = document.createElement("div");
-        fileItem.classList.add("file-item");
+        // Listen for changes to the system's color scheme preference
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateTheme);
 
-        // Create an image preview for image files
-        const file = files[i];
-        if (file.type.startsWith("image/")) {
-            const img = document.createElement("img");
-            img.src = URL.createObjectURL(file);
-            img.alt = file.name;
-            img.classList.add("file-preview");
-            fileItem.appendChild(img);
-        } else {
-            fileItem.innerHTML += `<p>${file.name}</p>`;
-        }
+        // Run the update function on initial load
+        document.addEventListener("DOMContentLoaded", updateTheme);
+</script>
 
-        // Append the file item to the file list
-        fileList.appendChild(fileItem);
+
+    <style>
+
+/* Light Mode (default styles) */
+body.light-mode {
+    background-color: white;
+    color: #333;
+}
+
+header.light-mode h1 {
+    color: #333;
+}
+
+header, .header, #header {
+    color: #000000; /* Black text for light mode */
+}
+
+
+body.light-mode input,
+body.light-mode textarea {
+    background-color: #f9f9f9;
+    color: #333; /* Dark text for light mode */
+    border: 1px solid #ccc;
+}
+
+body.light-mode button {
+    background-color: #007BFF;
+    color: white;
+}
+
+body.light-mode .file-area .file-dummy {
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+/* Dark Mode */
+
+/* Dark mode styles */
+@media (prefers-color-scheme: dark) {
+    header h1 {
+        color: white; /* White text for dark mode */
+    }
+
+    body.dark-mode {
+        background-color: #121212;
+        color: white;
     }
 }
 
-     function handleFileUpload(files, previewContainer, itemContainer) {
-         Array.from(files).forEach(file => {
-             const fileItem = document.createElement('div');
-             fileItem.classList.add('file-item');
-             fileItem.textContent = file.name;
+body.dark-mode {
+    background-color: #121212;
+    color: white; /* White text for dark mode */
+}
 
-             // If previewing images, create an image preview
-             if (file.type.startsWith('image/')) {
-                 const imgPreview = document.createElement('img');
-                 imgPreview.classList.add('file-preview');
-                 imgPreview.src = URL.createObjectURL(file);
-                 previewContainer.appendChild(imgPreview);
-             }
+h1.dark-mode h1{
+    color: white; /* White header text in dark mode */
+}
 
-             itemContainer.appendChild(fileItem);
-         });
-     }
+header.dark-mode p {
+    color: white; /* Lighter gray for the paragraph in dark mode */
+}
 
-    </script>
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode label,
+body.dark-mode button {
+    color: white; /* Ensure text is white in form elements */
+}
 
-    <style>
+/* Add styling for specific elements like inputs or labels in dark mode */
+body.dark-mode input,
+body.dark-mode textarea {
+    background-color: #333;
+    color: white; /* White text for inputs */
+    border: 1px solid #555;
+}
+
+/* For links or other text */
+body.dark-mode a {
+    color: #1abc9c; /* Example color for links */
+}
         /* Basic Reset */
         * {
             margin: 0;
@@ -150,15 +303,16 @@ function updateFileList(fileList, files) {
             background-color: white;
             color: #333;
             display: flex;
+            justify-content: center;
             flex-direction: column;
-            align-items: flex-start;
+            align-items: center;
             min-height: 100vh;
             padding: 20px;
         }
 
         /* Header */
         header {
-            text-align: left;
+            text-align: center;
             margin-bottom: 30px;
         }
 
@@ -167,9 +321,18 @@ function updateFileList(fileList, files) {
             color: #333;
         }
 
+        header h2 {
+            font-size: 1.5rem;
+        }
+
         header p {
+            text-align: left;
             font-size: 1.1rem;
             color: #666;
+        }
+
+        header ul {
+            text-align: left;
         }
 
         /* Form Elements */
@@ -179,6 +342,17 @@ function updateFileList(fileList, files) {
             display: inline-block;
             color: #555;
         }
+
+        input[type="tel"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #f9f9f9;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
 
         input[type="text"],
         input[type="email"],
@@ -196,6 +370,7 @@ function updateFileList(fileList, files) {
 
         textarea {
             height: 150px;
+            resize: none;
         }
 
         /* Radio buttons & checkboxes */
@@ -296,12 +471,6 @@ function updateFileList(fileList, files) {
             border: none;
         }
 
-        .file-area {
-  width: 100%;
-  position: relative;
-  font-size: 18px;
-}
-
 .file-area input[type=file] {
   position: absolute;
   width: 100%;
@@ -343,71 +512,105 @@ function updateFileList(fileList, files) {
   display: none;
 }
 
-.file-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
-}
+    /* Add issue button styling */
+    button[type="button"] {
+        background-color: #007BFF;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
 
-.file-preview {
-    width: 100px; /* Adjust size as needed */
-    height: 100px;
-    object-fit: cover;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    margin-top: 5px;
-}
+    button[type="button"]:hover {
+        background-color: #0069d9;
+    }
 
+    /* Submit button styling */
+    button[type="submit"] {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
 
-.file-item {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
+    button[type="submit"]:hover {
+        background-color: #45a049;
+    }
 
     </style>
 </head>
 
 <body>
     <header>
-        <h1>Warranty Form</h1>
-        <p>Please complete the form below</p>
+        <img id="headerImage" src="{{ url_for('static', filename='Zone Logo 800px.png') }}" alt="Header Image">
+        <h1 id="warrantyTitle">Warranty Claim Request</h1>
+        <br>
+        <h2 id="warrantySubTitle">Submit this form to start your Warranty Claim Process</h2>
+        <br>
+        <h3 id="warrantySubTitle"><strong>*** The current wait time for a warranty review is up to 72 hours from when your ticket is lodged. *** </strong></h3>
+        <p>
+            <br><br>
+            Ensure you have completed the <strong>Initial Contact</strong> and <strong>Assessment</strong> steps outlined in the <a href="https://service.zonetv.com.au/knowledge/warranty-claim-process">Warranty Claim Process</a>.
+            <br><br>
+            Please also provide the following information using the upload fields on this form:
+            <ul>
+                <li><strong>High-quality detailed photographs of the defect:</strong> Submit photographs that clearly depict the identified defect</li>
+                <br>
+                <li><strong>Once you claim is accessed and accepted:</strong> please liaise directly with your chosen repairer for the procurement of any necessary parts. You can assist by providing them with a list of authorised warranty items and clear photos. This will help them source the required parts from <a href="parts@zonerv.com.au"> parts@zonerv.com.au</a> in time for your booking.</li>
+            </ul>
+        </p>
     </header>
-    <form id="warrantyForm" method="POST" action="/submit-warranty">
-        <label for="name">Full Name:</label>
-        <input type="text" id="name" name="name" required>
+    <form id="warrantyForm" action="/" method="POST" enctype="multipart/form-data">
+        <span class="required">*</span>
+        <label for="customer_first_and_last_name">Full Name:</label>
+        <input type="text" id="customer_first_and_last_name" name="customer_first_and_last_name" required>
+        <span class="required">*</span>
         <label for="email">Email Address:</label>
         <input type="email" id="email" name="email" required>
+        <span class="required">*</span>
+        <label for="phone_number">Phone Number:</label>
+        <input type="tel" id="phone_number" name="phone_number" required> <br>
+        <span class="required">*</span>
+        <label for="van_number_build_spot">Van number (examples EXP123, ZSP000, ect.):</label>
+        <input type="text" id="van_number_build_spot" name="van_number_build_spot" required>
 
         <div id="issueContainer">
             <div class="issue">
-                <h3>Issue 1</h3>
-                <label for="short_summary_1">Short Summary of Issue:</label>
-                <input type="text" id="short_summary_1" name="short_summary[]" required>
+                <h3>Claim 1</h3>
                 <span class="required">*</span>
+                <label for="subject_1">Short Summary of Issue:</label>
+                <input type="text" id="subject_1" name="subject[]" required>
 
-                <label for="detailed_explanation_1">Detailed Explanation:</label>
-                <textarea id="detailed_explanation_1" name="detailed_explanation[]" required></textarea>
                 <span class="required">*</span>
+                <label for="content_1">Detailed Explanation:</label>
+                <textarea id="content_1" name="content[]" required></textarea>
 
-                <label for="photos_1">Photos of Issue: multiple photos can be placed in here</label>
-                <div class="file-area">
-                  <input type="file" id="photos" name="photos[]" accept="image/*" multiple>
-                  <div class="file-dummy">
-                    <span class="default">Click to select a file, or drag it here</span>
-                    <span class="success">Click to select a file, or drag it here</span>
-                  </div>
+                <label for="photos_1">Photos of Issue:</label> <br>
+                <div>
+                    <!-- Required single image upload -->
+                    <span class="required">*</span>
+                    <label for="upload_your_photos_1_of_3_">Upload a required image:</label>
+                    <input type="file" id="upload_your_photos_1_of_3_" name="upload_your_photos_1_of_3_[]" accept="image/*" required>
+
+
+                    <!-- Optional multiple image uploads -->
+                    <label for="more_photos">Upload optional images:</label>
+                    <input type="file" id="more_photos" name="more_photos[0]" accept="image/*,video/*" multiple>
                 </div>
-                <div id="file-list-1" class="file-list"></div>
-                <span class="required">*</span>
             </div>
         </div>
 
-        <button type="button" id="addIssue">Add Another Issue</button>
-        <button type="submit">Submit Warranty</button>
+        <div class="button-container">
+            <button type="button" id="addIssue">Add Another Issue</button>
+            <button type="submit">Submit Warranty Claim</button>
+        </div>
     </form>
 </body>
 </html>

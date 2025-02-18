@@ -19,9 +19,44 @@
       }
 
       updateFavicon(); // Run on page load
-
-
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateFavicon);
+
+document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("warrantyForm");
+        const submitBtn = form.querySelector("button[type='submit']");
+        const phoneInput = document.getElementById("phone_number");
+
+        form.addEventListener("submit", function (event) {
+            // Prevent double submission
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Submitting...";
+
+
+            // Validate phone number before submitting
+            if (!/^\+?\d+$/.test(phoneInput.value)) {
+                alert("Please enter a valid phone number (eg +61 123456789).");
+                submitBtn.disabled = false; // Re-enable button on validation failure
+                event.preventDefault();
+            }
+
+            // Handling file uploads and validation
+            let isValid = true;
+            const issuePhotos = document.querySelectorAll('[name^="photos_"]');
+            issuePhotos.forEach((photoInput) => {
+                if (photoInput.files.length === 0) {
+                    isValid = false;
+                    photoInput.setCustomValidity("Please upload at least one photo.");
+                } else {
+                    photoInput.setCustomValidity(""); // Clear any previous validation errors
+                }
+            });
+
+            if (!isValid) {
+                event.preventDefault();  // Prevent form submission if validation fails
+                submitBtn.disabled = false; // Re-enable button
+            }
+        });
+    });
 
     document.addEventListener("DOMContentLoaded", function () {
         const form = document.getElementById("warrantyForm");
@@ -234,10 +269,6 @@ body.light-mode textarea {
     border: 1px solid #ccc;
 }
 
-body.light-mode button {
-    background-color: #007BFF;
-    color: white;
-}
 
 body.light-mode .file-area .file-dummy {
     background-color: #fff;

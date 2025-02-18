@@ -20,7 +20,13 @@
       }
 
       updateFavicon(); // Run on page load
-  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateFavicon);</script>
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateFavicon);
+</script>
+<style>
+    iframe {
+    border: none;
+}
+</style>
     <body>
         <iframe src="templates/warranty_form.html" width="100%" height="1000px"></iframe>
     </body>
